@@ -2,8 +2,8 @@
  * ©FerryFair
  * */
 
-#ifndef Authuntication_h
-#define Authuntication_h
+#ifndef Authentication_h
+#define Authentication_h
 
 #include <stdlib.h>
 #include <iostream>
@@ -45,5 +45,5 @@ int converse (
 );
 
 
-#endif /* Authuntication_h */
+#endif /* Authentication_h */
 

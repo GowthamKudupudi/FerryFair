@@ -30,3 +30,7 @@ nb-configuration.xml
 # macOS
 **/.DS_Store
 **/._*
+
+#emacs
+**/#*#
+**/*~

@@ -1,6 +1,7 @@
 /* Gowtham Kudupudi 24/11/2013
  * ©FerryFair
  * */                                                                          
+
 #include "global.h"
 #include "config.h"
 #include "WSServer.h"
@@ -34,19 +35,17 @@
 
 using namespace std;
 
-/* enabled log level
- * */
-
- //int ff_log_type = FFL_ERR | FFL_WARN | FFL_NOTICE | FFL_DEBUG;
- //unsigned int ff_log_level = FPL_FPORT | FPL_WSSERV | FPL_HTTPSERV | FPL_MAIN
- //		| FPL_FSTREAM_HEART;
- //unsigned int ff_log_level = FPL_HTTPSERV;
+/*enabled log level*/
+//int ff_log_type = FFL_ERR | FFL_WARN | FFL_NOTICE | FFL_DEBUG;
+//unsigned int ff_log_level = FPL_FPORT | FPL_WSSERV | FPL_HTTPSERV |
+//FPL_MAIN | FPL_FSTREAM_HEART;
+//unsigned int ff_log_level = FPL_HTTPSERV;
 
 
 int child_exit_status = 0;
 int port = 0;
-std::map<lws*, WSServer::per_session_data__fairplay*> wsi_psdf_map;
-std::string configFile;
+map<lws*, WSServer::per_session_data__fairplay*> wsi_psdf_map;
+string configFile;
 string recordsFolder = "/var/" APP_NAME "records/";
 string logFile = "/var/log/" APP_NAME ".log";
 string initFile = "/etc/init/" APP_NAME ".conf";
@@ -61,20 +60,22 @@ string runningProcessFile = "/var/tmp/" APP_NAME ".pid";
 string internetTestURL;
 string corpNWGW;
 string homeFolder;
-FFJSON config;
 string hostname;
 string domainname;
+FFJSON config;
 unsigned int duration = 0;
 int ferr = 0;
 int run ();
 
+/*Grooms log file*/
 void groomLogFile () {
    if (ferr > 0)
-      close(ferr);
+      close (ferr);
    struct stat statbuf;
-   int stat_r = stat(logFile.c_str(), &statbuf);
+   int stat_r = stat (logFile .c_str(), &statbuf);
    ferr = open (
-      logFile.c_str(), O_WRONLY | (stat_r == -1 || statbuf.st_size > 5000000) ?
+      logFile .c_str(), O_WRONLY |
+      (stat_r == -1 || statbuf .st_size > 5000000) ?
       (O_CREAT | O_TRUNC) : O_APPEND, 0600
    );
 }
@@ -109,7 +110,7 @@ string runMode = "normal";
 
 void stopRunningProcess() {
    if (runningProcess > 0) {
-      ffl_notice(FPL_MAIN | NO_NEW_LINE, "Stopping current process...");
+      ffl_notice (FPL_MAIN | NO_NEW_LINE, "Stopping current process...");
       if (kill(runningProcess, SIGTERM) != -1) {
          cout << "OK\n";
       }
