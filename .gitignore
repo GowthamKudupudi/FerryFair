@@ -1,3 +1,5 @@
+**/.NoGit-*
+
 # Compiled Object files
 *.slo
 *.lo
@@ -31,3 +33,7 @@ nb-configuration.xml
 # macOS
 **/.DS_Store
 **/._*
+
+#emacs
+**/#*#
+**/*~
