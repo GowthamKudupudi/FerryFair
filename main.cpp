@@ -1,6 +1,6 @@
 /* Gowtham Kudupudi 24/11/2013
  * ©FerryFair
- * */                                                                          
+ * */
 
 #include "global.h"
 #include "config.h"
@@ -72,19 +72,17 @@ void groomLogFile () {
    if (ferr > 0)
       close (ferr);
    struct stat statbuf;
-   int stat_r = stat (logFile .c_str(), &statbuf);
-   ferr = open (
-      logFile .c_str(), O_WRONLY |
-      (stat_r == -1 || statbuf .st_size > 5000000) ?
-      (O_CREAT | O_TRUNC) : O_APPEND, 0600
-   );
+   int stat_r = stat (logFile .c_str (), &statbuf);
+   ferr = open (logFile .c_str (), O_WRONLY |
+                (stat_r == -1 || statbuf .st_size > 5000000) ?
+                (O_CREAT | O_TRUNC) : O_APPEND, 0600);
 }
 
 void ferryStreamFuneral (int stream_path) {}
 int next_option;
 
-void print_usage(FILE* stream, int exit_code, char* program_name) {
-   fprintf(stream, "Usage: %s <option> [<parameter>]\n", program_name);
+void print_usage (FILE* stream, int exit_code, char* program_name) {
+   fprintf (stream, "Usage: %s <option> [<parameter>]\n", program_name);
    string doc = "-c --configure Configures " APP_NAME ""
       "\n-f --config-file <file name> it reads configuration from the "
       "file specified. It should be given ahead of all other options"
@@ -392,7 +390,7 @@ int run () {
 }
 
 int main (int argc, char** argv) {
-   Authentication_ Authentication ("gowtham", "tornshoees");
+   Authentication_ Authentication ("Necktwi", "tornshoes");
    if (Authentication .is_valid()) {
       cout << "Authorized" << endl;
    } else {
