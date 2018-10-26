@@ -20,6 +20,7 @@ Build*/
 
 nbproject/private/
 build/
+Build**/
 nbbuild/
 dist/
 nbdist/
