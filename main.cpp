@@ -1,6 +1,6 @@
-/* Gowtham Kudupudi 24/11/2013
- * ©FerryFair
- * */
+/* 
+* Gowtham Kudupudi 24/11/2013
+* ©FerryFair    *       *       *       *       *       *      *      *     */
 
 #include "global.h"
 #include "config.h"
@@ -14,7 +14,7 @@
 #include <FFJSON.h>
 #include <logger.h>
 #include <libwebsockets.h>
-#include <linux/prctl.h>
+#include <sys/prctl.h>
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -29,7 +29,6 @@
 #include <list>
 #include <signal.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <getopt.h>
 
@@ -158,7 +157,11 @@ int readConfig() {
    }
    std::ifstream hfile ("/etc/hostname", ios::ate | ios::in);
    if (!hfile .is_open()) {
-      ffl_err (0, "/etc/hostname not found.");
+      ffl_err (1, "/etc/hostname not found.");
+      hfile .open ("/etc/conf.d/hostname", ios::ate | ios::in);
+   }
+   if (!hfile .is_open()) {
+      ffl_err (1, "/etc/conf.d/hostname not found.");
       exit (-1);
    }   
    hfile. seekg(ios::end);

@@ -53,8 +53,8 @@ enum _fp_log_level {
 	NO_NEW_LINE = 1 << 31
 };
 
-void terminate_all_paths();
-int init_path(std::string path);
-void terminate_path(int path);
+void terminate_all_paths ();
+int init_path (std::string path);
+void terminate_path (int path);
 
 #endif

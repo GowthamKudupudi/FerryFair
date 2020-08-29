@@ -1,7 +1,6 @@
-/*
- * Gowtham Kudupudi 2018/07/26
- * ©FerryFair
- */
+/**
+* Gowtham Kudupudi 2018/07/26
+* ©FerryFair */
 
 //#if defined(LWS_USE_POLARSSL)
 //#else
@@ -14,7 +13,7 @@
 //#endif
 //#endif
 
-#include <libwebsockets.h>
+#include "WSServer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -36,8 +35,6 @@
 #include "lws_config.h"
 
 #include "FerryStream.h"
-#include "global.h"
-#include "WSServer.h"
 #include <ferrybase/JPEGImage.h>
 #include <FFJSON.h>
 #include <logger.h>
@@ -51,23 +48,24 @@ using namespace std;
 
 #define LWS_NO_CLIENT
 
-FFJSON            HTTPModel;
-int               close_testing;
-int               max_poll_elements;
+FFJSON                   HTTPModel;
+int                      close_testing;
+int                      max_poll_elements;
 #ifdef EXTERNAL_POLL
-lws_pollfd*       pollfds;
-int*              fd_lookup;
-int               count_pollfds;
+lws_pollfd*              pollfds;
+int*                     fd_lookup;
+int                      count_pollfds;
 #endif
-volatile int      dynamic_vhost_enable = 0;
-static int        test_options;
+volatile int             dynamic_vhost_enable = 0;
+static   int             test_options;
 struct lws_vhost*        dynamic_vhost;
 struct lws_context*      context;
 struct lws_plat_file_ops fops_plat;
 struct lws_plat_file_ops secure_fops_plat;
 
 #if defined(LWS_WITH_TLS) && defined(LWS_HAVE_SSL_CTX_set1_param)
-char crl_path[1024] = "";
+char crl_path [1024] = "";
+char root_path [] = "/";
 #endif
 
 bool validate_path_l (std::string& p) {
@@ -86,24 +84,24 @@ void test_server_unlock(int care)
 }
 
 static void
-dump_handshake_info(struct lws *wsi) {
+dump_handshake_info (struct lws *wsi) {
    int n;
    static const char *token_names[] = {
       /*[WSI_TOKEN_GET_URI]		=*/ "GET URI",
       /*[WSI_TOKEN_POST_URI]		=*/ "POST URI",
       /*[WSI_TOKEN_OPTIONS_URI]	=*/ "OPTIONS URI",
-      /*[WSI_TOKEN_HOST]		=*/ "Host",
+      /*[WSI_TOKEN_HOST]		   =*/ "Host",
       /*[WSI_TOKEN_CONNECTION]	=*/ "Connection",
-      /*[WSI_TOKEN_KEY1]		=*/ "key 1",
-      /*[WSI_TOKEN_KEY2]		=*/ "key 2",
+      /*[WSI_TOKEN_KEY1]		   =*/ "key 1",
+      /*[WSI_TOKEN_KEY2]		   =*/ "key 2",
       /*[WSI_TOKEN_PROTOCOL]		=*/ "Protocol",
       /*[WSI_TOKEN_UPGRADE]		=*/ "Upgrade",
-      /*[WSI_TOKEN_ORIGIN]		=*/ "Origin",
-      /*[WSI_TOKEN_DRAFT]		=*/ "Draft",
+      /*[WSI_TOKEN_ORIGIN]		   =*/ "Origin",
+      /*[WSI_TOKEN_DRAFT]		   =*/ "Draft",
       /*[WSI_TOKEN_CHALLENGE]		=*/ "Challenge",
       
       /* new for 04 */
-      /*[WSI_TOKEN_KEY]		=*/ "Key",
+      /*[WSI_TOKEN_KEY]		      =*/ "Key",
       /*[WSI_TOKEN_VERSION]		=*/ "Version",
       /*[WSI_TOKEN_SWORIGIN]		=*/ "Sworigin",
       
@@ -111,9 +109,9 @@ dump_handshake_info(struct lws *wsi) {
       /*[WSI_TOKEN_EXTENSIONS]	=*/ "Extensions",
       
       /* client receives these */
-      /*[WSI_TOKEN_ACCEPT]		=*/ "Accept",
-      /*[WSI_TOKEN_NONCE]		=*/ "Nonce",
-      /*[WSI_TOKEN_HTTP]		=*/ "Http",
+      /*[WSI_TOKEN_ACCEPT]		   =*/ "Accept",
+      /*[WSI_TOKEN_NONCE]		   =*/ "Nonce",
+      /*[WSI_TOKEN_HTTP]		   =*/ "Http",
       
       "Accept:",
       "If-Modified-Since:",
@@ -136,76 +134,76 @@ dump_handshake_info(struct lws *wsi) {
    
    for (n = 0; n < sizeof (token_names) / sizeof (token_names[0]); n++) {
       if (!lws_hdr_total_length(wsi, (lws_token_indexes) n))
-      continue;
+         continue;
       
-      lws_hdr_copy(wsi, buf, sizeof buf, (lws_token_indexes) n);
+      lws_hdr_copy (wsi, buf, sizeof buf, (lws_token_indexes) n);
       
-      fprintf(stderr, "    %s %s\n", token_names[n], buf);
+      fprintf (stderr, "    %s %s\n", token_names[n], buf);
    }
 }
 
 /* this protocol server (always the first one) just knows how to do HTTP */
-const char * get_mimetype(const char *file) {
-   int n = strlen(file);
+const char * get_mimetype (const char *file) {
+   int n = strlen (file);
    
    if (n < 5)
-   return NULL;
+      return NULL;
    
    if (!strcmp(&file[n - 4], ".ico"))
-   return "image/x-icon";
+      return "image/x-icon";
    
    if (!strcmp(&file[n - 4], ".png"))
-   return "image/png";
+      return "image/png";
    
    if (!strcmp(&file[n - 4], ".svg"))
-   return "image/svg+xml";
+      return "image/svg+xml";
    
    if (!strcmp(&file[n - 5], ".html"))
-   return "text/html";
+      return "text/html";
    
    if (!strcmp(&file[n - 4], ".php"))
-   return "text/html";
+      return "text/html";
    
    if (!strcmp(&file[n - 3], ".js"))
-   return "text/javascript";
+      return "text/javascript";
    
    if (!strcmp(&file[n - 4], ".css"))
-   return "text/css";
+      return "text/css";
    
    if (!strcmp(&file[n - 5], ".json"))
-   return "application/json";
+      return "application/json";
    
    if (!strcmp(&file[n - 4], ".txt"))
-   return "text/plain";
+      return "text/plain";
    
    if (!strcmp(&file[n - 7], ".ffjson"))
-   return "text/plain";
+      return "text/plain";
    
    if (!strcmp(&file[n - 5], ".woff"))
-   return "application/x-font-woff";
+      return "application/x-font-woff";
    
    if (!strcmp(&file[n - 11], ".safariextz"))
-   return "application/octet-stream";
+      return "application/octet-stream";
    
    return NULL;
 }
 
-unsigned int WSServer::create_session() {
+unsigned int WSServer::create_session () {
    unsigned int session_id = ++session_count;
-   user_session* us = new user_session();
+   user_session* us = new user_session ();
    us->session_id = session_id;
-   us->last_access_time = time(NULL);
-   user_sessions[session_id] = us;
+   us->last_access_time = time (NULL);
+   user_sessions [session_id] = us;
    return session_id;
 }
 
-unsigned int WSServer::valid_session(unsigned int session_id) {
-   if (user_sessions.find(session_id) != user_sessions.end()) {
-      user_session* us = user_sessions[session_id];
-      time_t ct = time(NULL);
+unsigned int WSServer::valid_session (unsigned int session_id) {
+   if (user_sessions .find (session_id) != user_sessions .end()) {
+      user_session* us = user_sessions [session_id];
+      time_t ct = time (NULL);
       if ((ct - us->last_access_time) <
-          (int) config["HttpUserSessionTimeout"]) {
-         us->last_access_time = time(NULL);
+          (int) config ["HttpUserSessionTimeout"]) {
+         us->last_access_time = time (NULL);
          return session_id;
       }
    }
@@ -376,8 +374,9 @@ int WSServer::callback_http (
             }
          }
          if(models[(const char*)pss->vhost]["indexFile"]){
-            sIndexFile=(const char*)models[(const char*)pss->vhost]["indexFile"];
-            ffl_debug(FPL_HTTPSERV, "indexFile: %s", sIndexFile.c_str());
+            sIndexFile = (const char*) models [(const char*)
+               pss->vhost] ["indexFile"];
+            ffl_debug (FPL_HTTPSERV, "indexFile: %s", sIndexFile.c_str());
          }
          
          // exit if there is an attempt to access parent directory
@@ -393,7 +392,7 @@ int WSServer::callback_http (
          
          /* check for the "send a big file by hand" example case */
          
-         if (strcmp((const char *) in, "/model.ffjson") == 0 ||
+         if (strcmp((const char*) in, "/model.ffjson") == 0 ||
              strcmp((const char*) in, "/model.json") == 0) {
             pss->payload = new string(models[(const char*)pss->vhost].stringify(true));
             goto sendJSONPayload;
@@ -411,7 +410,7 @@ int WSServer::callback_http (
          if (((const char*) in)[len - 1] == '/') {
             strcat(buf, sIndexFile.c_str());
          }
-         else if(!pExtNail){
+         else if (!pExtNail) {
             if (lws_add_http_header_status(wsi, 301, &p, end))
             return 1;
             if (lws_is_ssl(wsi))
@@ -424,7 +423,7 @@ int WSServer::callback_http (
             if(!S_ISDIR(st.st_mode))
             goto endofextnail;
             location += "/index.html";
-            if(lws_add_http_header_by_name(wsi,
+            if (lws_add_http_header_by_name (wsi,
                                            (unsigned char *) "Location:",
                                            (unsigned char *)location.c_str(),
                                            location.length(), &p, end))
@@ -495,7 +494,7 @@ int WSServer::callback_http (
             sPHPCMD+=buf;
             pss->payload=new string(getStdoutFromCommand(sPHPCMD));
             file_len = pss->payload->length();
-         } else{
+         } else {
             
             //pss->fd = open(buf, O_RDONLY | _O_BINARY);
             //pss->fd=lws_plat_file_open(wsi, buf, &file_len,
@@ -505,6 +504,7 @@ int WSServer::callback_http (
             //   ffl_debug(FPL_HTTPSERV, "unable to open file");
             //   return -1;
             //}
+            //pss->lws_fd_ptr = lws_vfs_file_open (&fops_plat, buf,
          }
          if (lws_add_http_header_status(wsi, 200, &p, end))
          return 1;
@@ -1253,7 +1253,7 @@ WSServer::WSServer (
       strcpy(m_pcClient,pcClient);
       strcpy(m_pcAddress,pcAddress);
    #endif
-      #ifndef WIN32
+   #ifndef WIN32
       m_iSysLogOptions = LOG_PID | LOG_PERROR;
    #endif
    #ifndef LWS_NO_CLIENT
@@ -1276,23 +1276,23 @@ WSServer::WSServer (
       }
    m_iRateUs = m_iRateUs * 1000;
    #endif
-   m_Info.vhost_name=m_pcHostName;
+   m_Info.vhost_name = m_pcHostName;
    m_Info.port = m_iPort;
    m_Info.iface = *m_pcInterface ? m_pcInterface : NULL;
-   m_Info.protocols = protocols;
+   //m_Info.protocols = protocols;
+   m_Info.pprotocols = pprotocols;
    m_Info.gid = -1;
    m_Info.uid = -1;
-   m_Info.options = m_iOpts | LWS_SERVER_OPTION_VALIDATE_UTF8
-   | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT
-   | LWS_SERVER_OPTION_VALIDATE_UTF8;
+   m_Info.options = m_iOpts | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT
+   | LWS_SERVER_OPTION_EXPLICIT_VHOSTS;
    m_Info.max_http_header_pool = 16;
    m_Info.extensions = exts;
-   m_Info.timeout_secs = 5;
-   if(m_iSecurePort
-#ifndef LWS_NO_CLIENT
+   //m_Info.timeout_secs = 5;
+   if (m_iSecurePort
+   #ifndef LWS_NO_CLIENT
       && !*m_pcClient
-#endif
-      ){
+   #endif
+   ) {
       m_SecureInfo=m_Info;
       m_SecureInfo.port=m_iSecurePort;
       m_SecureInfo.ssl_cipher_list = 
@@ -1316,17 +1316,23 @@ WSServer::WSServer (
       m_SecureInfo.ssl_ca_filepath = m_pcSSLCAFilePath;
       
    }
-   heartThread = new thread(bind(&WSServer::heart,this));
+   heartThread = new thread (bind (&WSServer::heart, this));
 }
 
 WSServer::~WSServer() {
-   heartThread->join();
+   heartThread->join ();
    delete heartThread;
+   FFJSON::Iterator it = config ["virtualWebHosts"] .begin ();
+   FFJSON::Iterator end = config ["virtualWebHosts"] .end ();
+   while (it != end) {
+      delete (lws_http_mount_wrap*) (void*) (*it) ["vfs_mount"];
+      ++it;
+   }
 }
 
-FFJSON WSServer::models(FFJSON::OBJECT);
+FFJSON WSServer::models (FFJSON::OBJECT);
 
-int WSServer::heart() {
+int WSServer::heart () {
    int n=0,N = 0;
 #ifndef LWS_NO_DAEMONIZE
    if (!*m_pcClient && m_bDaemonize && lws_daemonize("/tmp/.lwstecho-lock")) {
@@ -1342,23 +1348,23 @@ int WSServer::heart() {
 #endif
    /* tell the library what debug level to emit and to send it to syslog */
    lws_set_log_level(m_iDebugLevel, lwsl_emit_syslog);
-   lwsl_notice("libwebsockets test server - license LGPL2.1+SLE\n");
-   lwsl_notice("(C) Copyright 2010-2016 Andy Green <andy@warmcat.com>\n");
+   lwsl_notice ("libwebsockets test server - license LGPL2.1+SLE\n");
+   lwsl_notice ("(C) Copyright 2010-2016 Andy Green <andy@warmcat.com>\n");
 #ifndef LWS_NO_CLIENT
    if (*m_pcClient) {
-      lwsl_notice("Running in client mode\n");
+      lwsl_notice ("Running in client mode\n");
       m_iPort = CONTEXT_PORT_NO_LISTEN;
    } else {
 #endif
 #ifndef LWS_NO_SERVER
-      lwsl_notice("Running in server mode\n");
+      lwsl_notice ("Running in server mode\n");
 #endif
 #ifndef LWS_NO_CLIENT
    }
 #endif
-   m_pContext = lws_create_context(&m_Info);
-   if (m_pContext==NULL) {
-      lwsl_err("libwebsocket init failed\n");
+   m_pContext = lws_create_context (&m_Info);
+   if (m_pContext == NULL) {
+      lwsl_err ("libwebsocket init failed\n");
       return -1;
    }
    if (m_iSecurePort
@@ -1368,44 +1374,88 @@ int WSServer::heart() {
    ) {
       m_pSecureContext = lws_create_context(&m_SecureInfo);
       if (m_pSecureContext == NULL) {
-         lwsl_err("libwebsocket init failed\n");
+         lwsl_err ("libwebsocket init failed\n");
          return -1;
       }
    }
    fops_plat = *(lws_get_fops(m_pContext));
-   lws_get_fops(m_pContext)->open = fops_open;
-   secure_fops_plat = *(lws_get_fops(m_pSecureContext));
-   lws_get_fops(m_pSecureContext)->open = secure_fops_open;
+      //lws_get_fops (m_pContext)->open = fops_open;
+   secure_fops_plat = *(lws_get_fops (m_pSecureContext));
+      //lws_get_fops (m_pSecureContext)->open = secure_fops_open;
+   FFJSON::Iterator it = config ["virtualWebHosts"] .begin ();
+   FFJSON::Iterator end = config ["virtualWebHosts"] .end ();
+   if (it == end) {
+      ffl_err (1, "No vhost specified in the config. Exiting.");
+      throw "No vhost specified in the config.";
+   }
+   while (it != end) {
+      m_Info .mounts = new lws_http_mount_wrap (
+         NULL,
+         root_path,
+         (const char*) (*it) ["rootdir"],
+         "index.html",
+         NULL,
+         NULL,
+         NULL,
+         NULL,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         LWSMPRO_FILE,
+         1,
+         NULL
+      );
+      m_Info .vhost_name = (const char*) it;
+      if (!lws_create_vhost (m_pContext, &m_Info)) {
+         lwsl_err ("Failed to create vhost.\n");
+         throw "Failed to create vhost.";
+      }
+      m_SecureInfo .mounts = m_Info .mounts;
+      m_SecureInfo .vhost_name = m_Info .vhost_name;
+      if (!lws_create_vhost (m_pSecureContext, &m_SecureInfo)) {
+         lwsl_err ("Failed to create vhost.\n");
+         throw "Failed to create vhost.";
+      }
+      (*it) ["vfs_mount"] = (void*) m_Info .mounts;
+      ++it;
+   }
    
 #ifndef LWS_NO_CLIENT
    if (*m_pcClient) {
-      lwsl_notice("Client connecting to %s:%u....\n", m_pcAddress, m_iPort);
+      lwsl_notice ("Client connecting to %s:%u....\n", m_pcAddress, m_iPort);
       /* we are in client mode */
-      m_pWSI = lws_client_connect(pContext, m_pCAddress, iPort, (bool)iSecurePort, "/", m_pcAddress, "origin", NULL, -1);
+      m_pWSI = lws_client_connect (pContext, m_pCAddress, iPort, (bool)iSecurePort, "/", m_pcAddress, "origin", NULL, -1);
       if (!m_pWSI) {
-         lwsl_err("Client failed to connect to %s:%u\n", m_pcAddress, m_iPort);
+         lwsl_err ("Client failed to connect to %s:%u\n", m_pcAddress, m_iPort);
          goto bail;
       }
-      lwsl_notice("Client connected to %s:%u\n", m_pcAddress, m_iPort);
+      lwsl_notice ("Client connected to %s:%u\n", m_pcAddress, m_iPort);
    }
 #endif
-   signal(SIGINT, sighandler);
+   signal (SIGINT, sighandler);
    
-   while (n >= 0 && !force_exit && (duration == 0 || duration > (time(NULL) -
-                                                                 starttime))) {
+   while (n >= 0 && !force_exit &&
+      (duration == 0 || duration > (time (NULL) - starttime))
+   ) {
 #ifndef LWS_NO_CLIENT
       if (*pcClient) {
          struct timeval tv;
-         gettimeofday(&tv, NULL);
-         if (((unsigned int) tv.tv_usec - m_uiOldUs) > (unsigned int) m_iRateUs) {
-            lws_callback_on_writable_all_protocol(&protocols[0]);
+         gettimeofday (&tv, NULL);
+         if (
+            ((unsigned int) tv.tv_usec - m_uiOldUs) >
+            (unsigned int) m_iRateUs
+         ) {
+            lws_callback_on_writable_all_protocol (&protocols[0]);
             uiOldUs = tv.tv_usec;
          }
       }
 #endif
       if (new_pck_chk) {
          std::map <int, bool>::iterator i;
-         i = packs_to_send.begin();
+         i = packs_to_send.begin ();
          while (i != packs_to_send.end()) {
             if (i->second) {
                std::list<lws*>& wa = *(path_wsi_map)[i->first];
@@ -1413,23 +1463,23 @@ int WSServer::heart() {
                   std::list<lws*>::iterator j = wa.begin();
                   while (j != wa.end()) {
                      lws_callback_on_writable(*j);
-                     ffl_debug(FPL_WSSERV, "%s:%p",
-                               id_path_map[i->first].c_str(), *j);
-                     j++;
+                     ffl_debug (FPL_WSSERV, "%s:%p",
+                                id_path_map [i->first] .c_str(), *j);
+                     ++j;
                   }
                } else {
                   break;
                }
             };
             i->second = false;
-            i++;
+            ++i;
          }
          new_pck_chk = false;
       }
-      n = lws_service(m_pContext, 10);
-      if(m_pSecureContext){
-         N = lws_service(m_pSecureContext,10);
-         if(N<0)break;
+      n = lws_service(m_pContext, 0);
+      if (m_pSecureContext) {
+         //N = lws_service(m_pSecureContext, 0);
+         //if (N < 0) break;
       }
    }
    force_exit = 1;
@@ -1446,3 +1496,4 @@ bail:
 }
 
 //string WSServer::per_session_data__http::vhost();
+

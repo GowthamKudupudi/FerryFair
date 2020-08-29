@@ -1,6 +1,6 @@
 {
    "name": "FairPlay configuration file",
-   "homeFolder": "/home/gowtham/Workspace/WWW",
+   "homeFolder": "/mnt/IceCap/workspace/www",
    "hostName": "www.ferryfair.com",
    "port": 9271,
    "bootup": true,
@@ -28,23 +28,23 @@
    "logLevel": [16, 8, 4, 1],
 
    "#lwsDebug1": 65535,
-   "#lwsDebug":15,   
-   "lwsDebug": 7,
+   "lwsDebug":15,   
+   "#lwsDebug": 7,
    "virtualWebHosts": {
+      "www": {
+         "rootdir": "/mnt/IceCap/workspace/www"
+      },
       "fairplay": {
-         "rootdir": "/home/gowtham/Workspace/fairplay"
+         "rootdir": "/mnt/IceCap/workspace/fairplay"
       },
       "deb": {
-         "rootdir": "/home/gowtham/Workspace/deb"
-      },
-      "www": {
-         "rootdir": "/home/gowtham/Workspace/WWW"
+         "rootdir": "/mnt/IceCap/workspace/deb"
       },
       "underconstruction": {
-         "rootdir": "/home/gowtham/Workspace/W3"
+         "rootdir": "/mnt/IceCap/workspace/W3"
       },
       "rosy": {
-         "rootdir": "/home/gowtham/Workspace/rosy"
+         "rootdir": "/mnt/IceCap/workspace/rosy"
       },
       "mail": {
          "rootdir": "/usr/share/roundcubemail",
